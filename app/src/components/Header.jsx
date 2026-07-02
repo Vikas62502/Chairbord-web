@@ -63,6 +63,11 @@ const Header = () => {
             Contact
           </Link>
         </NavbarItem>
+        <NavbarItem>
+          <Link color="foreground" href="/checkout">
+            Pay
+          </Link>
+        </NavbarItem>
       </NavbarContent>
       
       {/* Update Button */}
@@ -144,6 +149,11 @@ const Header = () => {
             <li>
               <Link color="foreground" href="/contactus" onClick={toggleMenu}>
                 Contact
+              </Link>
+            </li>
+            <li>
+              <Link color="foreground" href="/checkout" onClick={toggleMenu}>
+                Pay
               </Link>
             </li>
           </ul>
