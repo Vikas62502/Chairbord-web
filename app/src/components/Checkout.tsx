@@ -2,6 +2,7 @@
 
 import client from "@/app/axiosClient";
 import React, { useState, useCallback, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import { load } from "@cashfreepayments/cashfree-js";
 import { AxiosError } from "axios";
 import { toast } from "react-toastify";
@@ -13,12 +14,35 @@ interface PaymentResponse {
   message?: string;
 }
 
+interface WebviewUser {
+  id: string;
+  name: string;
+  mobileNumber: string;
+  email: string;
+}
+
 type CashfreeMode = "production" | "sandbox";
 type CashfreeInstance = NonNullable<Awaited<ReturnType<typeof load>>>;
 
 const RECOMMENDED_AMOUNTS = [500, 1000, 1500, 2000];
 
+function parseWebviewUser(searchParams: URLSearchParams): WebviewUser {
+  return {
+    id: searchParams.get("id") ?? "",
+    name: searchParams.get("name") ?? "",
+    mobileNumber: searchParams.get("mobileNumber") ?? "",
+    email: searchParams.get("email") ?? "",
+  };
+}
+
 const Checkout = () => {
+  const searchParams = useSearchParams();
+  const [user, setUser] = useState<WebviewUser>({
+    id: "",
+    name: "",
+    mobileNumber: "",
+    email: "",
+  });
   const [amount, setAmount] = useState("");
   const [loading, setLoading] = useState(false);
   const [sdkReady, setSdkReady] = useState(false);
@@ -26,6 +50,12 @@ const Checkout = () => {
 
   const mode: CashfreeMode =
     (process.env.NEXT_PUBLIC_CASHFREE_MODE as CashfreeMode) ?? "production";
+
+  const isWebview = Boolean(user.id && user.name && user.mobileNumber && user.email);
+
+  useEffect(() => {
+    setUser(parseWebviewUser(searchParams));
+  }, [searchParams]);
 
   useEffect(() => {
     let cancelled = false;
@@ -56,6 +86,11 @@ const Checkout = () => {
       return;
     }
 
+    if (!user.id || !user.name || !user.mobileNumber || !user.email) {
+      toast.error("Missing user details. Please open checkout from the app.");
+      return;
+    }
+
     if (!cashfreeRef.current) {
       toast.error("Payment SDK is still loading. Please try again.");
       return;
@@ -63,8 +98,11 @@ const Checkout = () => {
 
     setLoading(true);
     try {
-      // Same as mobile app: POST /cashfree/create-order { amount }
       const res = await client.post<PaymentResponse>("/cashfree/create-order-web", {
+        id: Number(user.id),
+        name: user.name,
+        mobile_number: user.mobileNumber,
+        email_id: user.email,
         amount: topupAmount,
       });
 
@@ -79,64 +117,84 @@ const Checkout = () => {
         redirectTarget: "_self",
       });
     } catch (err) {
-      const axiosErr = err as AxiosError<{ message?: string }>;
-      const message =
-        axiosErr.response?.data?.message ??
-        (err instanceof Error ? err.message : "Payment could not be started");
-      console.error("[Cashfree payment error]", err);
-      toast.error(message);
-    } finally {
-      setLoading(false);
-    }
-  }, [amount]);
-
-  return (
-    <div className="min-h-[70vh] bg-[#f5f5f5] text-gray-900 max-w-xl mx-auto px-4 py-12">
-      <h1 className="text-3xl font-bold text-gray-900 mb-2 text-center">Topup Wallet</h1>
-      <p className="text-gray-600 mb-8 text-center">
-        Add money to your wallet via Cashfree Payment Gateway.
-      </p>
-
-      <div className="space-y-4 bg-white p-6 rounded-xl shadow-md border border-gray-200">
-        <div>
-          <label className="block text-sm font-medium text-gray-800 mb-1">
-            Enter amount
-          </label>
-          <input
-            type="number"
-            min={1}
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            placeholder="Enter amount"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 bg-white placeholder:text-gray-400 focus:ring-2 focus:ring-[#582898] focus:border-[#582898]"
-          />
-        </div>
-
-        <p className="text-sm text-gray-600">Recommended</p>
-        <div className="flex flex-wrap gap-2">
-          {RECOMMENDED_AMOUNTS.map((value) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => setAmount(String(value))}
-              className="border border-[#582898] text-[#582898] bg-white rounded-md px-4 py-2 text-sm font-medium hover:bg-[#582898]/10"
-            >
-              ₹{value}
-            </button>
-          ))}
-        </div>
-
-        <button
-          type="button"
-          onClick={handlePayment}
-          disabled={loading || !sdkReady}
-          className="w-full mt-4 bg-[#582898] hover:bg-[#4a227f] disabled:bg-gray-400 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
-        >
-          {loading ? "Processing…" : !sdkReady ? "Loading payment…" : "PROCEED TO TOPUP"}
-        </button>
-      </div>
-    </div>
-  );
-};
-
-export default Checkout;
+      const axiosErr = err as AxiosError<{ message?: string }>;
+      const message =
+        axiosErr.response?.data?.message ??
+        (err instanceof Error ? err.message : "Payment could not be started");
+      console.error("[Cashfree payment error]", err);
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
+  }, [amount, user]);
+
+  return (
+    <div className="min-h-[70vh] bg-[#f5f5f5] text-gray-900 max-w-xl mx-auto px-4 py-12">
+      <h1 className="text-3xl font-bold text-gray-900 mb-2 text-center">Topup Wallet</h1>
+      <p className="text-gray-600 mb-8 text-center">
+        Add money to your wallet via Cashfree Payment Gateway.
+      </p>
+
+      <div className="space-y-4 bg-white p-6 rounded-xl shadow-md border border-gray-200">
+        {isWebview && (
+          <div className="rounded-lg bg-gray-50 border border-gray-200 p-4 space-y-1 text-sm">
+            <p className="text-gray-800">
+              <span className="font-medium">Name:</span> {user.name}
+            </p>
+            <p className="text-gray-800">
+              <span className="font-medium">Mobile:</span> {user.mobileNumber}
+            </p>
+            <p className="text-gray-800">
+              <span className="font-medium">Email:</span> {user.email}
+            </p>
+          </div>
+        )}
+
+        {!isWebview && (
+          <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">
+            Open this page from the app to load your account details.
+          </p>
+        )}
+
+        <div>
+          <label className="block text-sm font-medium text-gray-800 mb-1">
+            Enter amount
+          </label>
+          <input
+            type="number"
+            min={1}
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder="Enter amount"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 bg-white placeholder:text-gray-400 focus:ring-2 focus:ring-[#582898] focus:border-[#582898]"
+          />
+        </div>
+
+        <p className="text-sm text-gray-600">Recommended</p>
+        <div className="flex flex-wrap gap-2">
+          {RECOMMENDED_AMOUNTS.map((value) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setAmount(String(value))}
+              className="border border-[#582898] text-[#582898] bg-white rounded-md px-4 py-2 text-sm font-medium hover:bg-[#582898]/10"
+            >
+              ₹{value}
+            </button>
+          ))}
+        </div>
+
+        <button
+          type="button"
+          onClick={handlePayment}
+          disabled={loading || !sdkReady || !isWebview}
+          className="w-full mt-4 bg-[#582898] hover:bg-[#4a227f] disabled:bg-gray-400 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+        >
+          {loading ? "Processing…" : !sdkReady ? "Loading payment…" : "PROCEED TO TOPUP"}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default Checkout;
