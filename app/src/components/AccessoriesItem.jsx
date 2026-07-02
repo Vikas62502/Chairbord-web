@@ -1,6 +1,5 @@
 import Image from 'next/image';
 import a from '../assets/Accessories.png'
-import { div } from 'framer-motion/client';
 
 const AccessoriesItem = () => {
   return (

@@ -156,7 +156,11 @@ const Slide3 = () => (
 
 
 const ImageCarousel = () => {
-  const slides = [<Slide1 />, <Slide2 />, <Slide3 />];
+  const slides = [
+    { key: "slide-1", component: <Slide1 /> },
+    { key: "slide-2", component: <Slide2 /> },
+    { key: "slide-3", component: <Slide3 /> },
+  ];
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
@@ -174,7 +178,7 @@ const ImageCarousel = () => {
         style={{ transform: `translateX(-${currentIndex * 100}%)` }}
       >
         {slides.map((slide, index) => (
-          <div key={index}>{slide}</div>
+          <div key={slide.key}>{slide.component}</div>
         ))}
       </div>
 

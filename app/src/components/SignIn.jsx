@@ -2,6 +2,7 @@
 import Slideshow from "../components/Slideshow";
 import Form from "../components/Form";
 import Image from "next/image";
+import Link from "next/link";
 import logo from "../assets/chairbord.png";
 
 export default function SignIn() {
@@ -19,12 +20,12 @@ export default function SignIn() {
         height={50}
       />
         </div>
-        <a
+        <Link
           href="/"
           className="absolute top-6 right-6 bg-glass text- py-2 px-6 rounded-full backdrop-blur-xs border bg-gray-500/50 "
         >
           Back to website
-        </a>
+        </Link>
         {/* <div className="absolute bottom-10 left-10 text-white text-lg">
           <h3>Capturing Moments,</h3>
           <h3>Creating Memories</h3>

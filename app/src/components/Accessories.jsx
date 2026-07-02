@@ -1,6 +1,5 @@
 'use client'
 import Image from "next/image";
-import { useState } from "react";
 import gps from '../assets/Accessories.png'
 
 const ProductSection = () => {
