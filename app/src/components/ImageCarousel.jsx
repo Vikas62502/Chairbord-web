@@ -177,7 +177,7 @@ const ImageCarousel = () => {
         className="flex transition-transform ease-linear duration-1000"
         style={{ transform: `translateX(-${currentIndex * 100}%)` }}
       >
-        {slides.map((slide, index) => (
+        {slides.map((slide) => (
           <div key={slide.key}>{slide.component}</div>
         ))}
       </div>
