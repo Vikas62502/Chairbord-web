@@ -1,15 +1,14 @@
 import React from 'react'
 import Header from '../src/components/Header'
 import Footer from '../src/components/Footer'
-import Products from '../src/components/ProductsItems'
+import AccessoriesItem from '../src/components/AccessoriesItem'
 
 const page = () => {
   return (
     <div>
-<Header/>
-{/* <ProductsCarousel/> */}
-<Products/>
-<Footer/>
+      <Header/>
+      <AccessoriesItem/>
+      <Footer/>
     </div>
   )
 }
