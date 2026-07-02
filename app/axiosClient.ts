@@ -2,9 +2,19 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 
 const client: AxiosInstance = axios.create({
-  baseURL: 'https://cbpl.chairbord.in/v1/api',
+  baseURL: process.env.NEXT_PUBLIC_API_URL ?? "https://cbpl.chairbord.in/v1/api",
   // baseURL: 'http://localhost:3001/v1/api',
   // timeout: 10000,
+});
+
+client.interceptors.request.use((config) => {
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("cbpl-token");
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  }
+  return config;
 });
 
 let isRefreshing = false;

@@ -65,6 +65,11 @@ const Header = () => {
             Contact
           </Link>
         </NavbarItem>
+        <NavbarItem>
+          <Link color="foreground" href="/checkout">
+            Pay
+          </Link>
+        </NavbarItem>
       </NavbarContent>
 
       {/* Icons on the Right */}
@@ -157,24 +162,11 @@ const Header = () => {
                 Contact
               </Link>
             </li>
-            {/* <li>
-              <button className="flex items-center gap-2" onClick={toggleMenu}>
-                <i className="ri-heart-line"></i>
-                Wishlist
-              </button>
-            </li>
             <li>
-              <button className="flex items-center gap-2" onClick={toggleMenu}>
-                <i className="ri-shopping-cart-line"></i>
-                Cart
-              </button>
+              <Link color="foreground" href="/checkout" onClick={toggleMenu}>
+                Pay
+              </Link>
             </li>
-            <li>
-              <button className="flex items-center gap-2" onClick={toggleMenu}>
-                <i className="ri-user-line"></i>
-                Login
-              </button>
-            </li> */}
           </ul>
         </div>
       )}
